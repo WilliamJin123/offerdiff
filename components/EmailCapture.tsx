@@ -43,21 +43,29 @@ export default function EmailCapture() {
 
   if (status === "success") {
     return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
-        <p className="text-lg font-semibold text-emerald-300">You&apos;re on the list. 🎉</p>
-        <p className="mt-1 text-sm text-slate-300">
-          We&apos;ll email you when we ship new tools like this.
+      <div className="border border-money/40 bg-money/[0.06] px-6 py-7 text-center">
+        <p className="font-display text-lg font-medium text-money">You&apos;re on the list.</p>
+        <p className="mt-1 text-sm text-ink-2">
+          We&apos;ll email you when we ship the next tool for big money decisions.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
-      <h2 className="text-xl font-semibold text-slate-100">Get notified of new tools like this</h2>
-      <p className="mt-1.5 text-sm text-slate-400">
-        We&apos;re building more no-nonsense calculators for big career-money decisions. Drop your
-        email and we&apos;ll tell you when the next one&apos;s live.
+    <div className="border border-line-strong bg-paper-raised px-6 py-7 sm:px-8">
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-3">
+          Stay posted
+        </span>
+        <span className="h-px flex-1 bg-line" />
+      </div>
+      <h2 className="mt-3 font-display text-xl font-medium text-ink">
+        Get the next tool like this
+      </h2>
+      <p className="mt-1.5 max-w-xl text-sm text-ink-2">
+        We&apos;re building more plain-spoken calculators for big career-money calls. Leave your email
+        and we&apos;ll tell you when the next one&apos;s live.
       </p>
       <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row">
         <input
@@ -69,18 +77,18 @@ export default function EmailCapture() {
           }}
           placeholder="you@email.com"
           aria-label="Email address"
-          className="w-full flex-1 rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 outline-none transition focus:border-emerald-400/70 focus:ring-2 focus:ring-emerald-400/30"
+          className="w-full flex-1 rounded-md border border-line bg-white px-4 py-3 text-ink outline-none transition focus:border-money focus:ring-2 focus:ring-money/20"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="rounded-lg bg-emerald-500 px-6 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-ink px-6 py-3 font-medium text-paper-raised transition hover:bg-money disabled:cursor-not-allowed disabled:opacity-60"
         >
           {status === "loading" ? "Adding…" : "Notify me"}
         </button>
       </form>
-      {status === "error" && <p className="mt-2 text-sm text-rose-400">{message}</p>}
-      <p className="mt-2 text-xs text-slate-500">No spam. One email when there&apos;s something worth your time.</p>
+      {status === "error" && <p className="mt-2 text-sm text-loss">{message}</p>}
+      <p className="mt-2 text-[12px] text-ink-3">No spam. One email when there&apos;s something worth your time.</p>
     </div>
   );
 }

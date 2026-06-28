@@ -14,60 +14,64 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "linear-gradient(135deg, #0b1120 0%, #0f1f1a 100%)",
+          background: "#efece4",
           padding: "72px",
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", fontSize: 34, fontWeight: 700, color: "#e2e8f0" }}>
-          Offer<span style={{ color: "#10b981" }}>Diff</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", fontSize: 32, fontWeight: 700, color: "#1a1813" }}>
+            Offer<span style={{ color: "#0f6b43" }}>Diff</span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 18,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#8a8576",
+            }}
+          >
+            Free · instant · no signup
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
               display: "flex",
-              fontSize: 76,
-              fontWeight: 800,
-              color: "#f8fafc",
+              flexWrap: "wrap",
+              fontSize: 82,
+              fontWeight: 700,
+              color: "#1a1813",
               lineHeight: 1.05,
               letterSpacing: "-0.02em",
             }}
           >
-            Which job offer is
+            Which job offer is&nbsp;
+            <span style={{ color: "#0f6b43", fontStyle: "italic" }}>actually</span>
+            &nbsp;better?
           </div>
-          <div
-            style={{
-              display: "flex",
-              fontSize: 76,
-              fontWeight: 800,
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            <span style={{ color: "#f8fafc" }}>actually&nbsp;</span>
-            <span style={{ color: "#10b981" }}>better?</span>
-          </div>
-          <div style={{ display: "flex", marginTop: 28, fontSize: 32, color: "#94a3b8" }}>
-            Paste two offers → one number, adjusted for commute &amp; cost of living.
+          <div style={{ display: "flex", marginTop: 26, fontSize: 30, color: "#57534a" }}>
+            One honest number, after rent, commute &amp; cost of living.
           </div>
         </div>
 
-        <div style={{ display: "flex" }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              background: "rgba(16,185,129,0.15)",
-              border: "2px solid rgba(16,185,129,0.5)",
-              borderRadius: 16,
-              padding: "16px 28px",
-              fontSize: 38,
-              fontWeight: 700,
-              color: "#34d399",
+              alignItems: "baseline",
+              gap: 18,
+              border: "2px solid #c4bdab",
+              background: "#f8f6f0",
+              padding: "20px 30px",
             }}
           >
-            Offer A is worth +$18,240 / year
+            <span style={{ display: "flex", fontSize: 26, color: "#57534a" }}>Offer A leaves you</span>
+            <span style={{ display: "flex", fontSize: 46, fontWeight: 700, color: "#0f6b43" }}>
+              +$18,240/yr
+            </span>
           </div>
         </div>
       </div>

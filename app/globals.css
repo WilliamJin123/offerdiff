@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
-:root {
-  --background: #0b1120;
-  --foreground: #e2e8f0;
+@theme {
+  --color-paper: #efece4;
+  --color-paper-raised: #f8f6f0;
+  --color-paper-sunk: #e7e3d8;
+  --color-ink: #1a1813;
+  --color-ink-2: #57534a;
+  --color-ink-3: #8a8576;
+  --color-line: #d8d3c5;
+  --color-line-strong: #c4bdab;
+  --color-offer-a: #2f5070;
+  --color-offer-b: #b0541f;
+  --color-money: #0f6b43;
+  --color-loss: #9a2d2d;
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
 }
 
 html {
@@ -10,13 +24,17 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Remove number-input spinners for a cleaner money field */
+::selection {
+  background-color: color-mix(in srgb, var(--color-money) 22%, transparent);
+}
+
+/* Remove number-input spinners for clean ledger figures */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -25,4 +43,20 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* Native select arrow tinted to match the ink palette */
+select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2.5 4.5L6 8l3.5-3.5' fill='none' stroke='%238a8576' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.25rem center;
+  padding-right: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto;
+  }
 }

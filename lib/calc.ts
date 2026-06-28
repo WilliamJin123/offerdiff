@@ -1,13 +1,15 @@
 // OfferDiff calculation engine — pure, deterministic, unit-tested.
 //
-// Model (kept deliberately simple and transparent for v1):
-//   grossComp   = base + bonus + equity + benefits           (annual $)
-//   commuteCost = commute hours/yr valued at HALF hourly wage (annual $)
-//   netNominal  = grossComp - commuteCost
-//   adjusted    = netNominal * (100 / colIndex)               (purchasing power)
+// Model: estimate the money each offer actually leaves you per year, after the
+// big location-driven costs, then compare.
 //
-// Every assumption below is surfaced in the UI breakdown so the headline number
-// is never a black box.
+//   grossComp   = base + bonus + equity + benefits            (annual $)
+//   commuteCost = commute hours/yr valued at HALF hourly wage  (annual $)
+//   housingCost = monthly rent × 12 (entered, or assumed)      (annual $)
+//   livingCost  = non-housing essentials, scaled by COL index  (annual $)
+//   leftover    = grossComp − commuteCost − housingCost − livingCost
+//
+// Every line is surfaced in the UI ledger so the headline is never a black box.
 
 /** Working weeks per year, after ~4 weeks of vacation/holidays. */
 export const WORKING_WEEKS_PER_YEAR = 48;
@@ -18,20 +20,21 @@ export const HOURS_PER_YEAR_FULL_TIME = 2080;
 /** Commute time is valued at this fraction of hourly wage (a partial, not total, loss). */
 export const COMMUTE_TIME_VALUE_FACTOR = 0.5;
 
+/** National-average annual non-housing essentials (food, transport, utilities, etc.). */
+export const NONHOUSING_BASELINE = 22000;
+
+const MONTHS_PER_YEAR = 12;
+
 export interface OfferInput {
-  /** Annual base salary, $. */
   baseSalary: number;
-  /** Annual bonus, $. */
   bonus: number;
-  /** Annual equity value (simple $/yr), $. */
   equity: number;
-  /** Annual value of benefits (401k match, health premium coverage, etc.), $. */
   benefits: number;
-  /** One-way commute time, minutes. */
   commuteMinutes: number;
-  /** Days per week worked remotely (0–5). */
   remoteDays: number;
-  /** Cost-of-living index, national average = 100. */
+  /** Monthly housing cost, $ (already resolved to entered-or-assumed by the form). */
+  monthlyRent: number;
+  /** Cost-of-living index, national average = 100 (scales non-housing living cost). */
   colIndex: number;
 }
 
@@ -41,15 +44,15 @@ export interface OfferBreakdown {
   hourlyWage: number;
   annualCommuteHours: number;
   commuteCost: number;
-  netNominal: number;
-  colFactor: number;
-  adjustedValue: number;
+  housingCost: number;
+  livingCost: number;
+  leftover: number;
 }
 
 export interface ComparisonResult {
   a: OfferBreakdown;
   b: OfferBreakdown;
-  /** adjustedA - adjustedB (signed: positive means A is worth more). */
+  /** leftoverA - leftoverB (signed: positive means A leaves you more). */
   difference: number;
   absDifference: number;
   winner: "A" | "B" | "tie";
@@ -77,12 +80,12 @@ export function computeOffer(input: OfferInput): OfferBreakdown {
   const hourlyWage = base / HOURS_PER_YEAR_FULL_TIME;
   const commuteCost = annualCommuteHours * hourlyWage * COMMUTE_TIME_VALUE_FACTOR;
 
-  const netNominal = grossComp - commuteCost;
+  const housingCost = money(input.monthlyRent) * MONTHS_PER_YEAR;
 
-  // Guard against a zero/negative index; fall back to the national average.
   const safeIndex = input.colIndex > 0 ? input.colIndex : 100;
-  const colFactor = 100 / safeIndex;
-  const adjustedValue = netNominal * colFactor;
+  const livingCost = NONHOUSING_BASELINE * (safeIndex / 100);
+
+  const leftover = grossComp - commuteCost - housingCost - livingCost;
 
   return {
     grossComp,
@@ -90,16 +93,16 @@ export function computeOffer(input: OfferInput): OfferBreakdown {
     hourlyWage,
     annualCommuteHours,
     commuteCost,
-    netNominal,
-    colFactor,
-    adjustedValue,
+    housingCost,
+    livingCost,
+    leftover,
   };
 }
 
 export function compareOffers(aInput: OfferInput, bInput: OfferInput): ComparisonResult {
   const a = computeOffer(aInput);
   const b = computeOffer(bInput);
-  const difference = a.adjustedValue - b.adjustedValue;
+  const difference = a.leftover - b.leftover;
   const absDifference = Math.abs(difference);
   const winner: ComparisonResult["winner"] =
     Math.round(difference) === 0 ? "tie" : difference > 0 ? "A" : "B";

@@ -4,19 +4,23 @@ import EmailCapture from "@/components/EmailCapture";
 const FAQ = [
   {
     q: "How does OfferDiff compare two job offers?",
-    a: "It adds up each offer's annual value — base salary, bonus, equity, and benefits — then subtracts the cost of your commute and adjusts everything for the local cost of living. The result is a single apples-to-apples number for each offer, so you can see which one actually leaves you better off.",
+    a: "It adds up each offer's annual value — base, bonus, equity, and benefits — then subtracts the costs that location and lifestyle quietly impose: your commute, your rent, and everyday living costs. What's left is the money each offer actually leaves you per year, side by side.",
   },
   {
-    q: "How do you account for commute and remote work?",
-    a: "Your commute is time you don't get paid for, so we value it at 50% of your hourly wage (base salary ÷ 2,080 hours) across 48 working weeks. More remote days mean fewer trips to the office, which directly lowers that cost — that's how flexibility shows up in the number.",
+    q: "Can I use my real rent instead of an estimate?",
+    a: "Yes — that's the point. Enter your expected monthly rent for each offer and OfferDiff uses it directly. Leave it blank and it assumes the city's average rent, so you always get an answer either way.",
   },
   {
-    q: "How does cost of living factor in?",
-    a: "$150k in San Francisco doesn't buy what $150k buys in Austin. We convert each offer to equal purchasing power using a cost-of-living index (national average = 100), so a higher salary in an expensive city is compared fairly against a lower one somewhere cheaper.",
+    q: "How do you handle commute and remote work?",
+    a: "Your commute is unpaid time, so we value it at 50% of your hourly wage (base ÷ 2,080 hours) across 48 working weeks. More remote days mean fewer trips, which directly lowers that cost — that's how flexibility shows up in the number.",
+  },
+  {
+    q: "How are living costs estimated?",
+    a: "Beyond rent, we estimate non-housing essentials — food, transport, utilities — and scale them by each city's cost-of-living index (national average = 100). It's an estimate; rent, the biggest swing, is the part you control directly.",
   },
   {
     q: "Is this financial advice?",
-    a: "No. OfferDiff is a fast estimate to help you think clearly about a job-offer decision. It doesn't model taxes, raises, or equity upside, and it isn't financial advice.",
+    a: "No. OfferDiff is a fast, honest estimate to help you think clearly about a job-offer decision. It doesn't model income tax, raises, or equity upside, and it isn't financial or tax advice.",
   },
 ];
 
@@ -38,87 +42,82 @@ export default function Home() {
     applicationCategory: "FinanceApplication",
     operatingSystem: "Any",
     description:
-      "Compare two job offers and get one number: which is actually worth more per year, adjusted for salary, commute, remote work, benefits, and cost of living.",
+      "Compare two job offers and get one honest number: which actually leaves you more per year after salary, commute, rent, and cost of living.",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      {/* ambient glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[480px] bg-[radial-gradient(60%_60%_at_50%_0%,rgba(16,185,129,0.14),transparent_70%)]"
-      />
+    <main className="mx-auto max-w-4xl px-5 sm:px-6">
+      <header className="flex items-center justify-between border-b border-line py-5">
+        <span className="font-display text-lg font-semibold tracking-tight">
+          Offer<span className="text-money">Diff</span>
+        </span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-3">
+          Free · instant · no signup
+        </span>
+      </header>
 
-      <div className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
-        <header className="flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-tight text-slate-200">
-            Offer<span className="text-emerald-400">Diff</span>
-          </span>
-          <span className="text-xs text-slate-500">Free · No signup</span>
-        </header>
+      <section className="pt-12 sm:pt-16">
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-3">
+          Job-offer comparison · cost-of-living adjusted
+        </p>
+        <h1 className="mt-4 max-w-3xl text-balance font-display text-[1.75rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl sm:leading-[1.05]">
+          Which job offer is <span className="italic text-money">actually</span> better?
+        </h1>
+        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-2">
+          Paste two offers. OfferDiff nets out salary, bonus, equity, benefits, commute, and the real
+          cost of living — rent included — into one honest number: which one leaves you more.
+        </p>
+      </section>
 
-        <section className="mt-12 text-center sm:mt-16">
-          <h1 className="mx-auto max-w-3xl text-balance text-4xl font-bold tracking-tight text-slate-50 sm:text-5xl">
-            Which job offer is <span className="text-emerald-400">actually</span> better?
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-balance text-lg text-slate-300">
-            Compare two job offers and get one number — adjusted for salary, bonus, equity, benefits,
-            commute, remote days, and cost of living.
-          </p>
-        </section>
-
-        <div className="mt-10 sm:mt-12">
-          <Calculator />
-        </div>
-
-        <div className="mt-8">
-          <EmailCapture />
-        </div>
-
-        {/* SEO context — real, readable content below the tool */}
-        <section className="mx-auto mt-16 max-w-3xl">
-          <h2 className="text-2xl font-semibold text-slate-100">
-            A smarter way to compare two job offers
-          </h2>
-          <p className="mt-4 leading-relaxed text-slate-300">
-            Most people compare job offers by base salary alone — and pick the wrong one. A bigger
-            number in an expensive city, with a brutal commute and thin benefits, can quietly be worth
-            tens of thousands less per year than a &ldquo;smaller&rdquo; offer somewhere cheaper.
-            OfferDiff does the math that makes the two genuinely comparable.
-          </p>
-          <p className="mt-4 leading-relaxed text-slate-300">
-            Enter each offer&apos;s salary, bonus, annual equity, and benefits value, then your commute
-            and how many days a week you&apos;d work remotely, and the city. OfferDiff totals the
-            compensation, charges each offer for the time you&apos;d lose commuting, and adjusts both to
-            equal purchasing power. You get one honest headline: how much more, per year, one offer is
-            really worth.
-          </p>
-
-          <h2 className="mt-12 text-2xl font-semibold text-slate-100">Common questions</h2>
-          <dl className="mt-6 space-y-6">
-            {FAQ.map((item) => (
-              <div key={item.q}>
-                <dt className="font-semibold text-slate-100">{item.q}</dt>
-                <dd className="mt-1.5 leading-relaxed text-slate-400">{item.a}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-
-        <footer className="mt-16 border-t border-white/10 pt-6 text-center text-xs text-slate-500">
-          <p>OfferDiff · Estimates only, not financial advice. Cost-of-living indices are approximate.</p>
-        </footer>
+      <div className="mt-10 sm:mt-12">
+        <Calculator />
       </div>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
-      />
+      <div className="mt-6">
+        <EmailCapture />
+      </div>
+
+      <section className="mt-20 border-t border-line pt-10">
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-3">The reasoning</p>
+        <h2 className="mt-3 max-w-2xl font-display text-2xl font-medium tracking-tight">
+          A smarter way to compare two job offers
+        </h2>
+        <div className="mt-5 max-w-2xl space-y-4 leading-relaxed text-ink-2">
+          <p>
+            Most people compare offers by base salary alone — and pick the wrong one. A bigger number
+            in an expensive city, with a long commute, thin benefits, and brutal rent, can quietly be
+            worth tens of thousands less per year than a smaller offer somewhere cheaper. OfferDiff
+            does the math that makes the two genuinely comparable.
+          </p>
+          <p>
+            Enter each offer&apos;s salary, bonus, annual equity, and benefits, then your commute,
+            remote days, city, and rent. OfferDiff totals the compensation, charges each offer for the
+            time you&apos;d lose commuting and the cost of living where you&apos;d live, and shows what
+            each one actually leaves you. One honest headline, with every line shown.
+          </p>
+        </div>
+
+        <h2 className="mt-14 font-display text-2xl font-medium tracking-tight">Common questions</h2>
+        <dl className="mt-6 max-w-2xl divide-y divide-line border-t border-line">
+          {FAQ.map((item) => (
+            <div key={item.q} className="py-5">
+              <dt className="font-display font-medium text-ink">{item.q}</dt>
+              <dd className="mt-2 leading-relaxed text-ink-2">{item.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <footer className="mt-16 border-t border-line py-8 text-[12px] text-ink-3">
+        <p>
+          OfferDiff · Estimates only, not financial or tax advice. Cost-of-living indices and average
+          rents are approximate.
+        </p>
+      </footer>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }} />
     </main>
   );
 }

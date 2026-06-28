@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { compareOffers } from "@/lib/calc";
-import { formToInput, resolveColIndex, type OfferForm } from "@/lib/form";
+import { formToInput, resolveColIndex, resolveMonthlyRent, type OfferForm } from "@/lib/form";
 import OfferColumn from "./OfferColumn";
 import ResultCard from "./ResultCard";
 
-const offerA: OfferForm = {
+const defaultA: OfferForm = {
   label: "Offer A",
   baseSalary: "165000",
   bonus: "15000",
@@ -16,9 +16,10 @@ const offerA: OfferForm = {
   remoteDays: 2,
   city: "San Francisco, CA",
   customIndex: "",
+  monthlyRent: "",
 };
 
-const offerB: OfferForm = {
+const defaultB: OfferForm = {
   label: "Offer B",
   baseSalary: "145000",
   bonus: "10000",
@@ -28,28 +29,48 @@ const offerB: OfferForm = {
   remoteDays: 3,
   city: "Austin, TX",
   customIndex: "",
+  monthlyRent: "",
 };
 
 export default function Calculator() {
-  const [a, setA] = useState<OfferForm>(offerA);
-  const [b, setB] = useState<OfferForm>(offerB);
+  const [a, setA] = useState<OfferForm>(defaultA);
+  const [b, setB] = useState<OfferForm>(defaultB);
 
   const result = useMemo(() => compareOffers(formToInput(a), formToInput(b)), [a, b]);
-  const indexA = useMemo(() => resolveColIndex(a), [a]);
-  const indexB = useMemo(() => resolveColIndex(b), [b]);
+  const aMeta = useMemo(
+    () => ({ rentAssumed: resolveMonthlyRent(a).assumed, index: resolveColIndex(a) }),
+    [a]
+  );
+  const bMeta = useMemo(
+    () => ({ rentAssumed: resolveMonthlyRent(b).assumed, index: resolveColIndex(b) }),
+    [b]
+  );
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <OfferColumn form={a} accent="indigo" onChange={(patch) => setA((f) => ({ ...f, ...patch }))} />
-        <OfferColumn form={b} accent="amber" onChange={(patch) => setB((f) => ({ ...f, ...patch }))} />
+    <div className="flex flex-col gap-5">
+      <div className="relative border border-line-strong bg-paper-raised">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="p-5 sm:p-7">
+            <OfferColumn form={a} which="a" onChange={(patch) => setA((f) => ({ ...f, ...patch }))} />
+          </div>
+          <div className="border-t border-line p-5 sm:border-l sm:border-t-0 sm:p-7">
+            <OfferColumn form={b} which="b" onChange={(patch) => setB((f) => ({ ...f, ...patch }))} />
+          </div>
+        </div>
+        <span
+          aria-hidden
+          className="absolute left-1/2 top-1/2 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-line-strong bg-paper font-mono text-xs lowercase tracking-wide text-ink-3 md:flex"
+        >
+          vs
+        </span>
       </div>
+
       <ResultCard
         result={result}
         labelA={a.label || "Offer A"}
         labelB={b.label || "Offer B"}
-        indexA={indexA}
-        indexB={indexB}
+        aMeta={aMeta}
+        bMeta={bMeta}
       />
     </div>
   );
