@@ -20,15 +20,16 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://offerdiff.vercel.ap
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "OfferDiff — Compare Two Job Offers (Salary, Commute & Cost of Living)",
+  title: "OfferDiff — Compare Two Job Offers by Real Take-Home Pay",
   description:
-    "Compare two job offers and get one honest number: which actually leaves you more per year after salary, bonus, equity, benefits, commute, rent, and cost of living. Free, instant, no signup.",
+    "Compare two job offers and get one honest number: which actually leaves you more per year after income tax (federal + state), commute, rent, benefits, and cost of living. Free, instant, no signup.",
   keywords: [
     "compare two job offers",
     "job offer comparison calculator",
     "which job offer is better",
-    "salary cost of living calculator",
-    "job offer take home calculator",
+    "salary after tax by state",
+    "take home pay job offer calculator",
+    "cost of living salary calculator",
   ],
   alternates: { canonical: "/" },
   openGraph: {

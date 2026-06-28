@@ -1,15 +1,22 @@
 // OfferDiff calculation engine — pure, deterministic, unit-tested.
 //
-// Model: estimate the money each offer actually leaves you per year, after the
-// big location-driven costs, then compare.
+// Model: estimate the money each offer actually leaves you per year, after tax
+// and the big location-driven costs, then compare.
 //
-//   grossComp   = base + bonus + equity + benefits            (annual $)
-//   commuteCost = commute hours/yr valued at HALF hourly wage  (annual $)
-//   housingCost = monthly rent × 12 (entered, or assumed)      (annual $)
-//   livingCost  = non-housing essentials, scaled by COL index  (annual $)
-//   leftover    = grossComp − commuteCost − housingCost − livingCost
+//   ordinaryIncome = base + bonus + equity                    (taxable, annual $)
+//   incomeTax      = federal + state + FICA                    (annual $)
+//   afterTax       = ordinaryIncome − incomeTax
+//   + benefits     = untaxed employer value (401k match, etc.)
+//   − commuteCost  = commute hours/yr valued at HALF hourly wage
+//   − housingCost  = monthly rent × 12 (entered, or assumed)
+//   − livingCost   = non-housing essentials, scaled by COL index
+//   leftover       = afterTax + benefits − commuteCost − housingCost − livingCost
 //
 // Every line is surfaced in the UI ledger so the headline is never a black box.
+
+import { estimateTax, type FilingStatus, type TaxBreakdown } from "./tax";
+
+export type { FilingStatus } from "./tax";
 
 /** Working weeks per year, after ~4 weeks of vacation/holidays. */
 export const WORKING_WEEKS_PER_YEAR = 48;
@@ -36,10 +43,15 @@ export interface OfferInput {
   monthlyRent: number;
   /** Cost-of-living index, national average = 100 (scales non-housing living cost). */
   colIndex: number;
+  /** Effective state income-tax rate (0–1), resolved from the city/state. */
+  stateTaxRate: number;
 }
 
 export interface OfferBreakdown {
-  grossComp: number;
+  grossComp: number; // taxable ordinary income: base + bonus + equity
+  benefits: number;
+  tax: TaxBreakdown;
+  afterTax: number;
   inOfficeDays: number;
   hourlyWage: number;
   annualCommuteHours: number;
@@ -68,9 +80,13 @@ function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 
-export function computeOffer(input: OfferInput): OfferBreakdown {
+export function computeOffer(input: OfferInput, filing: FilingStatus): OfferBreakdown {
   const base = money(input.baseSalary);
-  const grossComp = base + money(input.bonus) + money(input.equity) + money(input.benefits);
+  const grossComp = base + money(input.bonus) + money(input.equity);
+  const benefits = money(input.benefits);
+
+  const tax = estimateTax(grossComp, filing, input.stateTaxRate);
+  const afterTax = grossComp - tax.total;
 
   const inOfficeDays = 5 - clamp(input.remoteDays, 0, 5);
   const commuteMinutes = money(input.commuteMinutes);
@@ -85,10 +101,13 @@ export function computeOffer(input: OfferInput): OfferBreakdown {
   const safeIndex = input.colIndex > 0 ? input.colIndex : 100;
   const livingCost = NONHOUSING_BASELINE * (safeIndex / 100);
 
-  const leftover = grossComp - commuteCost - housingCost - livingCost;
+  const leftover = afterTax + benefits - commuteCost - housingCost - livingCost;
 
   return {
     grossComp,
+    benefits,
+    tax,
+    afterTax,
     inOfficeDays,
     hourlyWage,
     annualCommuteHours,
@@ -99,9 +118,13 @@ export function computeOffer(input: OfferInput): OfferBreakdown {
   };
 }
 
-export function compareOffers(aInput: OfferInput, bInput: OfferInput): ComparisonResult {
-  const a = computeOffer(aInput);
-  const b = computeOffer(bInput);
+export function compareOffers(
+  aInput: OfferInput,
+  bInput: OfferInput,
+  filing: FilingStatus
+): ComparisonResult {
+  const a = computeOffer(aInput, filing);
+  const b = computeOffer(bInput, filing);
   const difference = a.leftover - b.leftover;
   const absDifference = Math.abs(difference);
   const winner: ComparisonResult["winner"] =

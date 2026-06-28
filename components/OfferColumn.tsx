@@ -2,6 +2,7 @@
 
 import { CITIES } from "@/lib/col";
 import { CUSTOM, NATIONAL, assumedRent, type OfferForm } from "@/lib/form";
+import { formatThousands } from "@/lib/format";
 
 type Accent = "a" | "b";
 
@@ -158,8 +159,8 @@ function MoneyField({
           id={id}
           type="text"
           inputMode="numeric"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={formatThousands(value)}
+          onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, ""))}
           className={`${field} pl-7 font-mono`}
           placeholder={placeholder}
         />

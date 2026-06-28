@@ -19,3 +19,10 @@ export function parseField(value: string): number {
   if (value.trim() === "") return NaN;
   return Number(value.replace(/[$,\s]/g, ""));
 }
+
+/** Format raw digit input with thousands separators for live display (e.g. "165000" → "165,000"). */
+export function formatThousands(raw: string): string {
+  const digits = raw.replace(/[^\d]/g, "");
+  if (digits === "") return "";
+  return Number(digits).toLocaleString("en-US");
+}

@@ -1,5 +1,6 @@
 import { CITIES, NATIONAL_AVERAGE_INDEX, NATIONAL_AVERAGE_RENT } from "./col";
 import type { OfferInput } from "./calc";
+import { stateRateForCode, NATIONAL_STATE_RATE } from "./tax";
 import { parseField } from "./format";
 
 export const NATIONAL = "__national__";
@@ -49,6 +50,12 @@ export function resolveMonthlyRent(form: OfferForm): { value: number; assumed: b
   return { value: assumedRent(form), assumed: true };
 }
 
+/** Effective state income-tax rate for a form's city (national average if unknown). */
+export function resolveStateRate(form: OfferForm): number {
+  if (form.city === NATIONAL || form.city === CUSTOM) return NATIONAL_STATE_RATE;
+  return stateRateForCode(CITY.get(form.city)?.state);
+}
+
 /** Convert UI form state into the numeric input the calc engine expects. */
 export function formToInput(form: OfferForm): OfferInput {
   return {
@@ -60,5 +67,6 @@ export function formToInput(form: OfferForm): OfferInput {
     remoteDays: form.remoteDays,
     monthlyRent: resolveMonthlyRent(form).value,
     colIndex: resolveColIndex(form),
+    stateTaxRate: resolveStateRate(form),
   };
 }

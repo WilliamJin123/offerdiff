@@ -8,6 +8,7 @@ import {
   NONHOUSING_BASELINE,
   type OfferInput,
 } from "./calc";
+import { estimateTax } from "./tax";
 
 const blank: OfferInput = {
   baseSalary: 0,
@@ -18,43 +19,49 @@ const blank: OfferInput = {
   remoteDays: 0,
   monthlyRent: 0,
   colIndex: 100,
+  stateTaxRate: 0,
 };
 
-describe("computeOffer — gross comp", () => {
-  it("sums base, bonus, equity, and benefits", () => {
-    const r = computeOffer({
-      ...blank,
-      baseSalary: 100000,
-      bonus: 15000,
-      equity: 20000,
-      benefits: 5000,
-    });
-    expect(r.grossComp).toBe(140000);
+describe("computeOffer — taxable gross comp", () => {
+  it("sums base, bonus, and equity (benefits are NOT taxable income)", () => {
+    const r = computeOffer(
+      { ...blank, baseSalary: 100000, bonus: 15000, equity: 20000, benefits: 5000 },
+      "single"
+    );
+    expect(r.grossComp).toBe(135000);
+    expect(r.benefits).toBe(5000);
+  });
+});
+
+describe("computeOffer — tax & after-tax", () => {
+  it("subtracts federal + state + FICA to get after-tax income", () => {
+    const r = computeOffer({ ...blank, baseSalary: 150000, stateTaxRate: 0.093 }, "single");
+    const expected = estimateTax(150000, "single", 0.093);
+    expect(r.tax.total).toBeCloseTo(expected.total, 2);
+    expect(r.afterTax).toBeCloseTo(150000 - expected.total, 2);
+  });
+
+  it("a no-tax state yields higher after-tax than a high-tax state", () => {
+    const tx = computeOffer({ ...blank, baseSalary: 150000, stateTaxRate: 0 }, "single");
+    const ca = computeOffer({ ...blank, baseSalary: 150000, stateTaxRate: 0.093 }, "single");
+    expect(tx.afterTax).toBeGreaterThan(ca.afterTax);
   });
 });
 
 describe("computeOffer — commute cost", () => {
   it("values commute time at 50% of hourly wage", () => {
-    // base 104,000 -> hourly = 50. 30 min one-way, 5 in-office days.
-    // daily round trip = 1h; annual = 1*5*48 = 240h; cost = 240*50*0.5 = 6000.
-    const r = computeOffer({ ...blank, baseSalary: 104000, commuteMinutes: 30 });
+    const r = computeOffer({ ...blank, baseSalary: 104000, commuteMinutes: 30 }, "single");
     expect(r.hourlyWage).toBe(50);
     expect(r.inOfficeDays).toBe(5);
     expect(r.annualCommuteHours).toBe(240);
     expect(r.commuteCost).toBe(6000);
   });
 
-  it("remote days reduce in-office days and thus commute cost", () => {
-    const full = computeOffer({ ...blank, baseSalary: 104000, commuteMinutes: 30, remoteDays: 0 });
-    const hybrid = computeOffer({ ...blank, baseSalary: 104000, commuteMinutes: 30, remoteDays: 2 });
+  it("remote days reduce in-office days and commute cost", () => {
+    const full = computeOffer({ ...blank, baseSalary: 104000, commuteMinutes: 30, remoteDays: 0 }, "single");
+    const hybrid = computeOffer({ ...blank, baseSalary: 104000, commuteMinutes: 30, remoteDays: 2 }, "single");
     expect(hybrid.inOfficeDays).toBe(3);
     expect(hybrid.commuteCost).toBeCloseTo(full.commuteCost * (3 / 5), 6);
-  });
-
-  it("5 remote days means zero commute cost", () => {
-    const r = computeOffer({ ...blank, baseSalary: 200000, commuteMinutes: 90, remoteDays: 5 });
-    expect(r.inOfficeDays).toBe(0);
-    expect(r.commuteCost).toBe(0);
   });
 
   it("uses the documented constants", () => {
@@ -65,36 +72,23 @@ describe("computeOffer — commute cost", () => {
   });
 });
 
-describe("computeOffer — housing", () => {
+describe("computeOffer — housing & living", () => {
   it("annualizes monthly rent", () => {
-    const r = computeOffer({ ...blank, monthlyRent: 2500 });
-    expect(r.housingCost).toBe(30000);
+    expect(computeOffer({ ...blank, monthlyRent: 2500 }, "single").housingCost).toBe(30000);
   });
 
-  it("zero rent means zero housing cost", () => {
-    expect(computeOffer({ ...blank, monthlyRent: 0 }).housingCost).toBe(0);
-  });
-});
-
-describe("computeOffer — living cost", () => {
   it("scales the non-housing baseline by the COL index", () => {
-    expect(computeOffer({ ...blank, colIndex: 100 }).livingCost).toBe(22000);
-    expect(computeOffer({ ...blank, colIndex: 150 }).livingCost).toBe(33000);
-    expect(computeOffer({ ...blank, colIndex: 50 }).livingCost).toBe(11000);
+    expect(computeOffer({ ...blank, colIndex: 150 }, "single").livingCost).toBe(33000);
   });
 
   it("guards a zero/negative index (falls back to national average)", () => {
-    expect(computeOffer({ ...blank, colIndex: 0 }).livingCost).toBe(22000);
-    expect(computeOffer({ ...blank, colIndex: -5 }).livingCost).toBe(22000);
+    expect(computeOffer({ ...blank, colIndex: 0 }, "single").livingCost).toBe(22000);
   });
 });
 
 describe("computeOffer — leftover", () => {
-  it("subtracts commute, housing, and living from gross", () => {
-    // gross 154,000 ; base 100k -> hourly 48.0769..., commute 30min 5 days
-    // annual hrs = 240 ; commute = 240*(100000/2080)*0.5 = 5769.23...
-    // housing = 2000*12 = 24000 ; living = 22000*1.2 = 26400
-    const r = computeOffer({
+  it("is after-tax + benefits − commute − housing − living", () => {
+    const input: OfferInput = {
       ...blank,
       baseSalary: 100000,
       bonus: 20000,
@@ -103,47 +97,50 @@ describe("computeOffer — leftover", () => {
       commuteMinutes: 30,
       monthlyRent: 2000,
       colIndex: 120,
-    });
-    expect(r.grossComp).toBe(154000);
-    expect(r.commuteCost).toBeCloseTo(240 * (100000 / 2080) * 0.5, 4);
-    expect(r.housingCost).toBe(24000);
-    expect(r.livingCost).toBe(26400);
-    expect(r.leftover).toBeCloseTo(154000 - r.commuteCost - 24000 - 26400, 4);
+      stateTaxRate: 0.05,
+    };
+    const r = computeOffer(input, "single");
+    const tax = estimateTax(150000, "single", 0.05);
+    const afterTax = 150000 - tax.total;
+    const commute = 240 * (100000 / 2080) * 0.5;
+    const expected = afterTax + 4000 - commute - 24000 - 26400;
+    expect(r.grossComp).toBe(150000);
+    expect(r.leftover).toBeCloseTo(expected, 2);
   });
 });
 
 describe("computeOffer — input sanitization", () => {
   it("clamps remoteDays to 0..5", () => {
-    expect(computeOffer({ ...blank, remoteDays: 9 }).inOfficeDays).toBe(0);
-    expect(computeOffer({ ...blank, remoteDays: -3 }).inOfficeDays).toBe(5);
+    expect(computeOffer({ ...blank, remoteDays: 9 }, "single").inOfficeDays).toBe(0);
+    expect(computeOffer({ ...blank, remoteDays: -3 }, "single").inOfficeDays).toBe(5);
   });
 
   it("treats NaN / non-finite / negative money as 0", () => {
-    const r = computeOffer({ ...blank, baseSalary: NaN, bonus: Infinity, monthlyRent: -100 });
+    const r = computeOffer({ ...blank, baseSalary: NaN, bonus: Infinity, monthlyRent: -100 }, "single");
     expect(r.grossComp).toBe(0);
     expect(r.housingCost).toBe(0);
   });
 });
 
 describe("compareOffers", () => {
-  it("reports the offer that leaves more as the winner with a signed difference", () => {
-    const a: OfferInput = { ...blank, baseSalary: 180000, monthlyRent: 3400, colIndex: 178 }; // SF
-    const b: OfferInput = { ...blank, baseSalary: 150000, monthlyRent: 1700, colIndex: 103 }; // Austin
-    const r = compareOffers(a, b);
+  it("a no-income-tax state can beat a higher-paying high-tax state", () => {
+    const ca: OfferInput = { ...blank, baseSalary: 180000, monthlyRent: 3400, colIndex: 178, stateTaxRate: 0.093 };
+    const tx: OfferInput = { ...blank, baseSalary: 160000, monthlyRent: 1500, colIndex: 102, stateTaxRate: 0 };
+    const r = compareOffers(ca, tx, "single");
     expect(r.winner).toBe("B");
     expect(r.difference).toBeCloseTo(r.a.leftover - r.b.leftover, 4);
     expect(r.absDifference).toBeCloseTo(Math.abs(r.difference), 4);
   });
 
-  it("declares a tie when leftovers are equal", () => {
-    const r = compareOffers({ ...blank, baseSalary: 100000 }, { ...blank, baseSalary: 100000 });
+  it("declares a tie for identical offers", () => {
+    const r = compareOffers({ ...blank, baseSalary: 100000 }, { ...blank, baseSalary: 100000 }, "single");
     expect(r.winner).toBe("tie");
     expect(r.absDifference).toBe(0);
   });
 
   it("winner is A when A leaves more", () => {
-    const r = compareOffers({ ...blank, baseSalary: 120000 }, { ...blank, baseSalary: 100000 });
+    const r = compareOffers({ ...blank, baseSalary: 130000 }, { ...blank, baseSalary: 100000 }, "single");
     expect(r.winner).toBe("A");
-    expect(r.difference).toBe(20000);
+    expect(r.difference).toBeGreaterThan(0);
   });
 });

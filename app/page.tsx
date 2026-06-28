@@ -4,24 +4,34 @@ import EmailCapture from "@/components/EmailCapture";
 const FAQ = [
   {
     q: "How does OfferDiff compare two job offers?",
-    a: "It adds up each offer's annual value — base, bonus, equity, and benefits — then subtracts the costs that location and lifestyle quietly impose: your commute, your rent, and everyday living costs. What's left is the money each offer actually leaves you per year, side by side.",
+    a: "It starts from each offer's salary, bonus, and equity, subtracts the income tax you'd actually pay, adds untaxed benefits, then subtracts the costs that location and lifestyle impose: your commute, your rent, and everyday living costs. What's left is the money each offer truly leaves you per year, side by side.",
+  },
+  {
+    q: "Does it account for taxes?",
+    a: "Yes — this is the part most calculators skip. OfferDiff estimates federal income tax (2025 brackets), FICA, and your state's income tax, so two offers in different states are compared on real take-home pay, not headline salary. Pick single or married filing jointly up top. It's an estimate, not a filed return.",
   },
   {
     q: "Can I use my real rent instead of an estimate?",
-    a: "Yes — that's the point. Enter your expected monthly rent for each offer and OfferDiff uses it directly. Leave it blank and it assumes the city's average rent, so you always get an answer either way.",
+    a: "Yes. Enter your expected monthly rent for each offer and OfferDiff uses it directly. Leave it blank and it assumes the city's average rent, so you always get an answer either way.",
   },
   {
     q: "How do you handle commute and remote work?",
     a: "Your commute is unpaid time, so we value it at 50% of your hourly wage (base ÷ 2,080 hours) across 48 working weeks. More remote days mean fewer trips, which directly lowers that cost — that's how flexibility shows up in the number.",
   },
   {
-    q: "How are living costs estimated?",
-    a: "Beyond rent, we estimate non-housing essentials — food, transport, utilities — and scale them by each city's cost-of-living index (national average = 100). It's an estimate; rent, the biggest swing, is the part you control directly.",
-  },
-  {
     q: "Is this financial advice?",
-    a: "No. OfferDiff is a fast, honest estimate to help you think clearly about a job-offer decision. It doesn't model income tax, raises, or equity upside, and it isn't financial or tax advice.",
+    a: "No. OfferDiff is a fast, honest estimate to help you think clearly about a job-offer decision. State tax is approximated with an effective rate, and it doesn't model raises, deductions, or equity upside. It isn't financial or tax advice.",
   },
+];
+
+const STEPS = [
+  "Add up gross comp: base salary + bonus + annual equity.",
+  "Subtract estimated income tax — federal (2025 brackets), FICA, and your state's rate.",
+  "Add untaxed benefits (401(k) match, employer health premiums).",
+  "Subtract your commute cost — office days × commute time, valued at half your hourly wage.",
+  "Subtract housing — your monthly rent (or the city average) × 12.",
+  "Subtract non-housing living costs, scaled by the city's cost-of-living index.",
+  "What's left is each offer's money left over per year. The bigger number wins.",
 ];
 
 export default function Home() {
@@ -42,7 +52,7 @@ export default function Home() {
     applicationCategory: "FinanceApplication",
     operatingSystem: "Any",
     description:
-      "Compare two job offers and get one honest number: which actually leaves you more per year after salary, commute, rent, and cost of living.",
+      "Compare two job offers by real take-home pay: which actually leaves you more per year after income tax, commute, rent, and cost of living.",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   };
 
@@ -59,20 +69,32 @@ export default function Home() {
 
       <section className="pt-12 sm:pt-16">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-3">
-          Job-offer comparison · cost-of-living adjusted
+          Job-offer comparison · after tax &amp; cost of living
         </p>
         <h1 className="mt-4 max-w-3xl text-balance font-display text-[1.75rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl sm:leading-[1.05]">
           Which job offer is <span className="italic text-money">actually</span> better?
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-2">
-          Paste two offers. OfferDiff nets out salary, bonus, equity, benefits, commute, and the real
-          cost of living — rent included — into one honest number: which one leaves you more.
+          Paste two offers. OfferDiff nets out salary, bonus, equity, benefits, income tax, commute,
+          and the real cost of living — rent included — into one honest number: which one leaves you
+          more in your pocket.
         </p>
       </section>
 
       <div className="mt-10 sm:mt-12">
         <Calculator />
       </div>
+
+      <details className="mt-6 border border-line bg-paper-raised px-6 py-4">
+        <summary className="cursor-pointer font-display text-[15px] font-medium text-ink">
+          How it&apos;s calculated
+        </summary>
+        <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-ink-2 marker:text-ink-3">
+          {STEPS.map((s) => (
+            <li key={s}>{s}</li>
+          ))}
+        </ol>
+      </details>
 
       <div className="mt-6">
         <EmailCapture />
@@ -86,15 +108,16 @@ export default function Home() {
         <div className="mt-5 max-w-2xl space-y-4 leading-relaxed text-ink-2">
           <p>
             Most people compare offers by base salary alone — and pick the wrong one. A bigger number
-            in an expensive city, with a long commute, thin benefits, and brutal rent, can quietly be
-            worth tens of thousands less per year than a smaller offer somewhere cheaper. OfferDiff
-            does the math that makes the two genuinely comparable.
+            in a high-tax, expensive city, with a long commute and brutal rent, can quietly be worth
+            tens of thousands less per year than a smaller offer somewhere cheaper. The same $180k is a
+            very different paycheck in California than in Texas once state tax and rent are in the
+            picture. OfferDiff does the math that makes the two genuinely comparable.
           </p>
           <p>
-            Enter each offer&apos;s salary, bonus, annual equity, and benefits, then your commute,
-            remote days, city, and rent. OfferDiff totals the compensation, charges each offer for the
-            time you&apos;d lose commuting and the cost of living where you&apos;d live, and shows what
-            each one actually leaves you. One honest headline, with every line shown.
+            Enter each offer&apos;s salary, bonus, equity, and benefits, then your commute, remote
+            days, city, and rent. OfferDiff estimates the tax you&apos;d actually pay, charges each
+            offer for the time you&apos;d lose commuting and the cost of living where you&apos;d live,
+            and shows what each one really leaves you. One honest headline, with every line shown.
           </p>
         </div>
 
@@ -111,8 +134,8 @@ export default function Home() {
 
       <footer className="mt-16 border-t border-line py-8 text-[12px] text-ink-3">
         <p>
-          OfferDiff · Estimates only, not financial or tax advice. Cost-of-living indices and average
-          rents are approximate.
+          OfferDiff · Estimates only, not financial or tax advice. Tax, cost-of-living indices, and
+          average rents are approximate.
         </p>
       </footer>
 
