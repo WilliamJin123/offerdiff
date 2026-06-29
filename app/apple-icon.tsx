@@ -16,16 +16,9 @@ export default function AppleIcon() {
           background: "#0f6b43",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            width: 0,
-            height: 0,
-            borderLeft: "48px solid transparent",
-            borderRight: "48px solid transparent",
-            borderBottom: "84px solid #f1eee7",
-          }}
-        />
+        <svg width="104" height="92" viewBox="0 0 104 92" xmlns="http://www.w3.org/2000/svg">
+          <path d="M52 6 L98 86 H6 Z" fill="#f1eee7" />
+        </svg>
       </div>
     ),
     { ...size }
