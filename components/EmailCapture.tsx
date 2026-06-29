@@ -9,6 +9,14 @@ export default function EmailCapture() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  // Channel attribution: capture ?ref= at first render, before the calculator
+  // rewrites the URL. Lands in the Supabase `source` column so you can see
+  // which post actually converted.
+  const [source] = useState(() => {
+    if (typeof window === "undefined") return "offerdiff";
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    return ref ? ref.slice(0, 40).replace(/[^\w.-]/g, "") || "offerdiff" : "offerdiff";
+  });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,13 +35,13 @@ export default function EmailCapture() {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed, source: "offerdiff" }),
+        body: JSON.stringify({ email: trimmed, source }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "Subscription failed");
       }
-      track("email_submitted");
+      track("email_submitted", { source });
       setStatus("success");
     } catch {
       setStatus("error");

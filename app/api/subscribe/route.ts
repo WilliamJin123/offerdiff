@@ -12,6 +12,8 @@ export async function POST(request: Request) {
 
   const { email, source } = (body ?? {}) as { email?: string; source?: string };
   const trimmed = typeof email === "string" ? email.trim().toLowerCase() : "";
+  const cleanSource =
+    (typeof source === "string" ? source : "offerdiff").slice(0, 60) || "offerdiff";
 
   if (!EMAIL_RE.test(trimmed)) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
@@ -36,7 +38,7 @@ export async function POST(request: Request) {
         "Content-Type": "application/json",
         Prefer: "return=minimal,resolution=ignore-duplicates",
       },
-      body: JSON.stringify({ email: trimmed, source: source ?? "offerdiff" }),
+      body: JSON.stringify({ email: trimmed, source: cleanSource }),
     });
 
     if (!res.ok) {
